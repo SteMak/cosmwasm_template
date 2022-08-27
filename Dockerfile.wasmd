@@ -1,0 +1,47 @@
+FROM golang:1.19.0
+
+WORKDIR /usr
+
+COPY info_to_stdout.bash .
+RUN ["/bin/bash", "-c", "git clone https://github.com/CosmWasm/wasmd.git 2> >(./info_to_stdout.bash)"]
+
+WORKDIR /usr/wasmd
+
+RUN git fetch --tags
+RUN git config --global advice.detachedHead false
+RUN ["/bin/bash", "-c", "git checkout", "$(git describe --tags `git rev-list --tags --max-count=1`)", "2> >(./../info_to_stdout.bash)"]
+
+RUN ["/bin/bash", "-c", "make install 2> >(./../info_to_stdout.bash)"]
+RUN make build
+
+ENV PATH="${PATH}:/usr/wasmd/build"
+
+ENV TERM xterm-256color
+
+ENV CHAIN_ID "malaga-420"
+ENV TESTNET_NAME "malaga-420"
+ENV FEE_DENOM "umlg"
+ENV STAKE_DENOM "uand"
+ENV BECH32_HRP "wasm"
+ENV WASMD_VERSION "v0.27.0"
+ENV CONFIG_DIR ".wasmd"
+ENV BINARY "wasmd"
+
+ENV COSMJS_VERSION "v0.28.1"
+ENV GENESIS_URL "https://raw.githubusercontent.com/CosmWasm/testnets/master/malaga-420/config/genesis.json"
+
+ENV RPC "https://rpc.malaga-420.cosmwasm.com:443"
+ENV API "https://api.malaga-420.cosmwasm.com"
+ENV FAUCET "https://faucet.malaga-420.cosmwasm.com"
+
+ENV NODE "https://rpc.malaga-420.cosmwasm.com:443"
+
+WORKDIR /usr/scope
+
+ARG UID=8877
+RUN useradd -u $UID wasm_user
+
+RUN mkdir -p /home/wasm_user
+RUN chown -R $UID /home/wasm_user
+
+USER wasm_user

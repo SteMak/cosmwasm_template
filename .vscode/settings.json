@@ -1,0 +1,7 @@
+{
+  "rust-analyzer.server.extraEnv": {
+    "CARGO_HOME": ".cargo_cache",
+    "CARGO_TARGET_DIR": ".cargo_analyzer",
+    "CARGO_BUILD_TARGET_DIR": ".cargo_analyzer"
+  }
+}

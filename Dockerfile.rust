@@ -1,0 +1,17 @@
+FROM rust:1.63.0
+
+ARG UID=8877
+RUN useradd -u $UID wasm_user
+USER wasm_user
+
+COPY info_to_stdout.bash .
+RUN ["/bin/bash", "-c", "rustup target add wasm32-unknown-unknown 2> >(./info_to_stdout.bash)"]
+RUN cargo install -q cargo-tarpaulin
+
+ENV CARGO_HOME /usr/cosmwasm_docker/.cargo_cache
+ENV CARGO_TARGET_DIR /usr/cosmwasm_docker/.cargo_target
+ENV CARGO_BUILD_TARGET_DIR /usr/cosmwasm_docker/.cargo_target
+ENV CARGO_TERM_COLOR always
+ENV TERM xterm-256color
+
+WORKDIR /usr/cosmwasm_docker

@@ -329,6 +329,14 @@ mod tests {
     let bad_takeover = execute(
       deps.as_mut(),
       env.clone(),
+      mock_info("creator", &[]),
+      ExecuteMsg::BecomeMaintainer {},
+    );
+    assert!(bad_takeover.is_err());
+
+    let bad_takeover = execute(
+      deps.as_mut(),
+      env.clone(),
       mock_info("user_1", &[]),
       ExecuteMsg::BecomeMaintainer {},
     );
@@ -1116,7 +1124,21 @@ mod tests {
       deps.as_mut(),
       mock_env(),
       mock_info("user_1", &[]),
+      ExecuteMsg::RegisterInCity { city_id: 1 },
+    )
+    .unwrap();
+    execute(
+      deps.as_mut(),
+      mock_env(),
+      mock_info("user_1", &[]),
       ExecuteMsg::UnRegisterFromCity { city_id: 0 },
+    )
+    .unwrap();
+    execute(
+      deps.as_mut(),
+      mock_env(),
+      mock_info("user_1", &[]),
+      ExecuteMsg::UnRegisterFromCity { city_id: 1 },
     )
     .unwrap();
 
