@@ -32,7 +32,7 @@ code.test.unit:
 code.test.integration:
 	docker run --rm --volume $(DIR):/usr/cosmwasm_docker $(CONTAINER_RUST) cargo integration-test -- --color=always
 code.test.coverage:
-	docker run --rm --volume $(DIR):/usr/cosmwasm_docker --security-opt seccomp=unconfined $(CONTAINER_RUST) cargo coverage -- --color=always
+	docker run --rm --volume $(DIR):/usr/cosmwasm_docker --security-opt seccomp=unconfined $(CONTAINER_RUST) cargo coverage --color=always
 code.schema:
 	docker run --rm --volume $(DIR):/usr/cosmwasm_docker $(CONTAINER_RUST) cargo schema
 
@@ -54,6 +54,7 @@ code.build.optimize:
 
 	sudo chown -R $(CURRENT_UID) $(DIR)/.optimize_cache/artifacts
 	mv $(DIR)/.optimize_cache/artifacts $(DIR)
+	rm $(DIR)/artifacts/checksums_intermediate.txt
 
 	sudo rm -rf $(DIR)/.optimize_cache
 
@@ -68,10 +69,10 @@ chain.wallet.fund:
 ifndef wallet
 	$(error "Error: missed wallet name, try 'make chain.wallet.fund wallet=WALLET_NAME'")
 endif
-	$(eval ADDRESS := $(shell docker run --rm --volume $(DIR)/.wasmd_data:/home/wasm_user/.wasmd $(CONTAINER_WASMD) wasmd keys show -a $(wallet)))
-	$(eval JSON := '{"denom": "$(CHAIN_FEE_DENOM)", "address": "$(ADDRESS)"}')
 	curl -X POST --header "Content-Type: application/json" \
-		--data $(JSON) $(CHAIN_FAUCET)/credit
+		--data '{ "denom": "$(CHAIN_FEE_DENOM)", "address": \
+			"$(shell docker run --rm --volume $(DIR)/.wasmd_data:/home/wasm_user/.wasmd $(CONTAINER_WASMD) wasmd keys show -a $(wallet))" \
+		}' $(CHAIN_FAUCET)/credit
 
 chain.wallet: chain.wallet.create chain.wallet.fund
 
@@ -87,7 +88,7 @@ endif
 		--volume $(DIR)/.wasmd_data:/home/wasm_user/.wasmd \
 		$(CONTAINER_WASMD) \
 	wasmd tx wasm store $(wasm) --from $(wallet) \
-		--chain-id malaga-420 --gas-prices 0.25umlg --gas auto --gas-adjustment 1.3 -y --output json -b block > $(DIR)/.wasmd_data/cached_code_loaded_json
+		--chain-id $(CHAIN_ID) --gas-prices 0.25$(FEE_DENOM) --gas auto --gas-adjustment 1.3 -y --output json -b block > $(DIR)/.wasmd_data/cached_code_loaded_json
 	cat $(DIR)/.wasmd_data/cached_code_loaded_json | jq -r '.logs[0].events[-1].attributes[0].value' > $(DIR)/.wasmd_data/cached_code_loaded_id
 
 chain.store_wasm.download_code:
