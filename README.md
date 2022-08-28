@@ -8,7 +8,7 @@ Docker is main tool you need:
 [Official installation link](https://docs.docker.com/engine/install)
 
 ### Console tools
-`jq`, `curl`, `make`, `sha3sum`, `cat`, `cut` and some other common known tools that are used in `Makefile` 
+`jq`, `curl`, `make`, `sha3sum`, `tput`, `cat`, `cut` and some other common known tools that are used in `Makefile` 
 
 ### Rust 1.55.0+ (optional)
 Optionally you can manually install `Rust` on your system following the guide

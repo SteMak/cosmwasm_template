@@ -27,7 +27,7 @@ pub enum ExecuteMsg {
   RegisterInCity {
     city_id: u64,
   },
-  UnRegisterFromCity {
+  UnregisterFromCity {
     city_id: u64,
   },
 

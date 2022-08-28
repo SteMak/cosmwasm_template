@@ -34,7 +34,7 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> R
     ExecuteMsg::UpdatePerson { nickname, email } => execute_update_person(deps, env, info, nickname, email),
 
     ExecuteMsg::RegisterInCity { city_id } => execute_register_in_city(deps, env, info, city_id),
-    ExecuteMsg::UnRegisterFromCity { city_id } => execute_unregister_from_city(deps, env, info, city_id),
+    ExecuteMsg::UnregisterFromCity { city_id } => execute_unregister_from_city(deps, env, info, city_id),
   }
 }
 
@@ -851,7 +851,7 @@ mod tests {
       deps.as_mut(),
       mock_env(),
       mock_info("user_1", &[]),
-      ExecuteMsg::UnRegisterFromCity { city_id: 0 },
+      ExecuteMsg::UnregisterFromCity { city_id: 0 },
     )
     .unwrap();
     execute(
@@ -989,7 +989,7 @@ mod tests {
       deps.as_mut(),
       mock_env(),
       mock_info("user_2", &[]),
-      ExecuteMsg::UnRegisterFromCity { city_id: 1 },
+      ExecuteMsg::UnregisterFromCity { city_id: 1 },
     )
     .unwrap();
 
@@ -1100,7 +1100,7 @@ mod tests {
       deps.as_mut(),
       mock_env(),
       mock_info("user_2", &[]),
-      ExecuteMsg::UnRegisterFromCity { city_id: 1 },
+      ExecuteMsg::UnregisterFromCity { city_id: 1 },
     );
     assert!(bad_upregistring_from_city.is_err());
 
@@ -1108,7 +1108,7 @@ mod tests {
       deps.as_mut(),
       mock_env(),
       mock_info("user_2", &[]),
-      ExecuteMsg::UnRegisterFromCity { city_id: 2 },
+      ExecuteMsg::UnregisterFromCity { city_id: 2 },
     );
     assert!(bad_upregistring_from_city.is_err());
 
@@ -1131,14 +1131,14 @@ mod tests {
       deps.as_mut(),
       mock_env(),
       mock_info("user_1", &[]),
-      ExecuteMsg::UnRegisterFromCity { city_id: 0 },
+      ExecuteMsg::UnregisterFromCity { city_id: 0 },
     )
     .unwrap();
     execute(
       deps.as_mut(),
       mock_env(),
       mock_info("user_1", &[]),
-      ExecuteMsg::UnRegisterFromCity { city_id: 1 },
+      ExecuteMsg::UnregisterFromCity { city_id: 1 },
     )
     .unwrap();
 
