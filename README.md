@@ -1,6 +1,27 @@
 # CosmWasm Template
 The project aims to show CosmWasm features and highlight important points
 
+- [CosmWasm Template](#cosmwasm-template)
+  - [Development environment](#development-environment)
+    - [Docker](#docker)
+    - [Console tools](#console-tools)
+    - [Rust 1.55.0+ (optional)](#rust-1550-optional)
+    - [Wasmd (optional)](#wasmd-optional)
+  - [Architecture](#architecture)
+    - [System cache](#system-cache)
+    - [Configuration](#configuration)
+    - [Outputs](#outputs)
+    - [Docker](#docker-1)
+    - [Code](#code)
+    - [Entrypoint](#entrypoint)
+  - [Makefile entrypoints](#makefile-entrypoints)
+    - [General](#general)
+    - [Contract code](#contract-code)
+    - [Chain actions](#chain-actions)
+  - [Code notes](#code-notes)
+  - [Getting started](#getting-started)
+  - [Functional requirements](#functional-requirements)
+
 
 ## Development environment
 ### Docker
@@ -67,6 +88,7 @@ Put the compiled file to $PATH
 cp build/wasmd ~/.local/bin
 ```
 
+
 ## Architecture
 ### System cache
 - `.cargo_analyzer/` - `cargo` target directory for `rust-analyzer` tool in `vscode`, it is different from default target dir as build cache from globally installed `rust` should not conflict with dockerized instance
@@ -126,3 +148,12 @@ cp build/wasmd ~/.local/bin
 - `chain.contract.instantiate` - instantiate contract, accept wallet name `wallet`, instantiate message `msg` and optional code ID `code_id` parameters
 - `chain.contract.execute` - execute message on contract, accept wallet name `wallet`, execute message `msg` and optional contract address `contract` parameters
 - `chain.contract.query` - query data from contract, accept query message `msg` and optional contract address `contract` parameters
+
+
+## Code notes
+
+
+## Getting started
+
+
+## Functional requirements
