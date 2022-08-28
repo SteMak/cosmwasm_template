@@ -111,14 +111,14 @@ cp build/wasmd ~/.local/bin
 
 ## Makefile entrypoints
 ### General
-- `setup` - build and configure docker images, it should be run once on project setup
+- `setup` - build and configure `docker` images, it should be run once on project setup
 
 ### Contract code
-- `code.build` - build contract code, the output file is not optimized enough for deploying to chain, but it needs for running integration tests
+- `code.build` - build contract code, the output file is not optimized enough for deploying to chain, but it may be used for running integration tests
 - `code.build.optimize` - build contract code for deploying to chain
 - `code.test.integration` - run integration tests, firstly, a wasm file should be built
 - `code.test.unit` - run unit tests provided in contract file
-- `code.test.coverage` - calculate unit tests coverage and stores report in `coverage` folder
+- `code.test.coverage` - calculate unit tests coverage
 
 ### Chain actions
 - `chain.wallet` - create and fund wallet, accept wallet name `wallet` parameter
