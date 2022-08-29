@@ -14,13 +14,6 @@ pub type CityName = String;
 pub type Nickname = String;
 pub type Email = String;
 
-// Derive implements features for the struct:
-// - Serialize - adds possibility to code the struct into JSON (is needed when other contracts try to get the storage)
-// - Deserialize - adds possibility to decode the struct from JSON
-// - Clone - adds possibility to create duplicate of the struct by calling struct_instance.clone()
-// - Debug - adds possibility to use the structure in asserts
-// - PartialEq - adds possibility to compare instances of the struct
-// - JsonSchema - adds possibility to create JSON schema of the struct
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 // Config is struct that is stored in cold storage by specific key
 pub struct Config {

@@ -19,6 +19,12 @@ The project aims to show CosmWasm features and highlight important points
     - [Contract code](#contract-code)
     - [Chain actions](#chain-actions)
   - [Code notes](#code-notes)
+    - [Derive](#derive)
+    - [Custom errors](#custom-errors)
+    - [Error propagation](#error-propagation)
+    - [Addresses](#addresses)
+    - [Message structs](#message-structs)
+    - [Contract entrypoints](#contract-entrypoints)
   - [Getting started](#getting-started)
   - [Functional requirements](#functional-requirements)
 
@@ -151,6 +157,58 @@ cp build/wasmd ~/.local/bin
 
 
 ## Code notes
+### Derive
+```rs
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)] 
+```
+Derive implements features for a following structure:
+- Serialize - adds possibility to code the struct into JSON (is needed when other contracts try to get the storage)
+- Deserialize - adds possibility to decode the struct from JSON
+- Clone - adds possibility to create duplicate of the struct by calling struct_instance.clone()
+- Debug - adds possibility to use the structure in asserts
+- PartialEq - adds possibility to compare instances of the struct
+- JsonSchema - adds possibility to create JSON schema of the struct
+
+### Custom errors
+Custom errors are cool! You may specify your own error text with parameters
+```rs
+pub enum CustomError {
+  #[error("Your access level is {have:?} and {needed:?} is needed")]
+  Unauthorized { have: u8, needed: u8 },
+}
+```
+
+### Error propagation
+What it is going there?
+```rs
+Ok(to_binary(&query(get_part_param()? + another_part_param)?)?)
+```
+Error propagation is a great pattern as errors could be processed in one place avoiding panic in local functions
+
+There is useful `Result<Ok_Type, Err_Type>` type defined, return values are unwrapped by `?` syntax
+
+`?` works like unwrap, but doesn't panic on error, just propagate it to higher level
+
+`?` may convert error type, if result error type implements `Std()` entry, for example:
+```rs
+pub enum CustomError {
+  #[error("{0}")]
+  Std(#[from] StdError),
+}
+```
+
+### Addresses
+There are `Addr` and `CanonicalAddr` types provided for addresses
+
+`Addr` is based on `String` type with some validations and may be received as parameter, caller address `info.sender`, etc
+
+`CanonicalAddr` is binary type and it is important to store any addresses in contract storage only wrapped to the type as text represetation may be changed in future
+
+`String` - it is totally bad idea to store or manipulate addresses wrapped to the type
+
+### Message structs
+
+### Contract entrypoints
 
 
 ## Getting started
