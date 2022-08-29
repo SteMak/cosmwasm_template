@@ -23,8 +23,8 @@ The project aims to show CosmWasm features and highlight important points
     - [Custom errors](#custom-errors)
     - [Error propagation](#error-propagation)
     - [Addresses](#addresses)
-    - [Message structs](#message-structs)
     - [Contract entrypoints](#contract-entrypoints)
+    - [Storage layout](#storage-layout)
   - [Getting started](#getting-started)
   - [Functional requirements](#functional-requirements)
 
@@ -206,9 +206,22 @@ There are `Addr` and `CanonicalAddr` types provided for addresses
 
 `String` - it is totally bad idea to store or manipulate addresses wrapped to the type
 
-### Message structs
-
 ### Contract entrypoints
+```rs
+#[cfg_attr(not(feature = "library"), entry_point)]
+```
+Contract has 3 main entrypoints:
+- `Instantiate` - should be called once on contract deployment, base storage layout is defined there
+- `Execute` - base set data method, routes other methods
+- `Query` - base view data method, routes other methods
+
+As `execute` and `query` entrypoints are routers, signatures are defined separately in `msg.rs`
+```rs
+#[serde(rename_all = "snake_case")]
+```
+It is considered using snake case in json message field names
+
+### Storage layout
 
 
 ## Getting started
