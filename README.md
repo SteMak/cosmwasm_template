@@ -1,5 +1,5 @@
 # CosmWasm Template
-The project aims to show CosmWasm features and highlight important points
+The project aims to show `CosmWasm` features and highlight important points
 
 - [CosmWasm Template](#cosmwasm-template)
   - [Development environment](#development-environment)
@@ -26,6 +26,10 @@ The project aims to show CosmWasm features and highlight important points
     - [Contract entrypoints](#contract-entrypoints)
     - [Storage layout](#storage-layout)
   - [Getting started](#getting-started)
+    - [Starting](#starting)
+    - [Developing](#developing)
+    - [Deploying to testnet](#deploying-to-testnet)
+    - [Interacting](#interacting)
   - [Functional requirements](#functional-requirements)
     - [General overview and terms](#general-overview-and-terms)
     - [Instantiate method](#instantiate-method)
@@ -35,8 +39,8 @@ The project aims to show CosmWasm features and highlight important points
 
 ## Development environment
 ### Docker
-Docker is the main tool you need:
-[The official installation link](https://docs.docker.com/engine/install)
+`Docker` is the main tool you need:
+[installation link](https://docs.docker.com/engine/install)
 
 ### Console tools
 `jq` `curl` `make` `sha3sum` `tput` `cat` `cut` and other commonly known tools used in `Makefile`
@@ -44,7 +48,7 @@ Docker is the main tool you need:
 ### Rust 1.55.0+ (optional)
 Optionally, following the guide, you can manually install `Rust` on your system
 
-Rust is needed as it is the primary language for CosmWasm smart contracts development
+`Rust` is needed as it is the primary language for `CosmWasm` smart contracts development
 
 Install [rustup](https://rustup.rs/) if it is missed
 ```
@@ -62,7 +66,7 @@ cargo version # run the following line if the version is lower than 1.55.0+
 rustup update stable
 ```
 
-Install wasm32 target if it is missed
+Install `wasm32` target if it is missed
 ```bash
 rustup target add wasm32-unknown-unknown
 ```
@@ -70,7 +74,7 @@ rustup target add wasm32-unknown-unknown
 ### Wasmd (optional)
 Optionally, you can manually install `Wasmd` on your system following the guide
 
-Wasmd is the tool for interacting with blockchain and smart contracts
+`Wasmd` is the tool for interacting with blockchain and smart contracts
 
 Install [go](https://go.dev/doc/install) if it is missed
 
@@ -166,12 +170,12 @@ cp build/wasmd ~/.local/bin
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)] 
 ```
 Derive implements features for the following structure:
-- Serialize - adds a possibility to code the struct into JSON (is needed when other contracts try to get the storage)
-- Deserialize - adds a possibility to decode the struct from JSON
-- Clone - adds a possibility to create a duplicate of the struct by calling struct_instance.clone()
-- Debug - adds a possibility to use the structure in asserts
-- PartialEq - adds a possibility to compare instances of the struct
-- JsonSchema - adds a possibility to create JSON schema of the struct
+- `Serialize` - adds a possibility to code the struct into JSON (is needed when other contracts try to get the storage)
+- `Deserialize` - adds a possibility to decode the struct from JSON
+- `Clone` - adds a possibility to create a duplicate of the struct by calling struct_instance.clone()
+- `Debug` - adds a possibility to use the structure in asserts
+- `PartialEq` - adds a possibility to compare instances of the struct
+- `JsonSchema` - adds a possibility to create JSON schema of the struct
 
 ### Custom errors
 Custom errors are cool! You may specify your error text with parameters
@@ -208,7 +212,7 @@ There are `Addr` and `CanonicalAddr` types provided for addresses
 
 `CanonicalAddr` is a binary type and it is important to store any addresses in contract storage only wrapped to the type as text representation may be changed in future
 
-`String` - it is a terrible idea to store or manipulate addresses wrapped to the type
+`String` - it is a terrible idea to store or manipulate addresses wrapped to the `String` type
 
 ### Contract entrypoints
 ```rs
@@ -230,12 +234,116 @@ It is considered using snake case in JSON message field names
 Item::new("item_key");
 Map::new("map_key");
 ```
-CosmWasm implements key-value storage API, you should set unique keys manually for each storage instace
+`CosmWasm` implements key-value storage API, you should set unique keys manually for each storage instace
 
 `Item` and `Map` are the main storage types, description with examples on [crates.io](https://crates.io/crates/cw-storage-plus)
 
 
 ## Getting started
+### Starting
+Clone the repository
+```bash
+git clone git@github.com:SteMak/cosmwasm_template.git
+cd cosmwasm_template
+```
+
+Build `Docker` images
+```bash
+make setup
+```
+
+### Developing
+**Update contract sources**
+
+For example, you may update restrictions in `src/contract.rs : execute_become_maintainer`, changing the minimum maintainer age
+
+**Check code consistency by running tests**
+
+Tests are presented at the end of `src/contract.rs` file
+```bash
+make code.test.unit
+```
+
+**Check coverage**
+
+When code updation is finished, check tests code coverage and update tests to get the wanted coverage level
+
+The coverage report is placed in `coverage/` directory
+```bash
+make code.test.coverage
+```
+
+**Check integration tests**
+
+If your contract may do cross-contract calls, you may want to create and run integration tests
+
+Integration tests work with compiled binary, do not forget to provide the path to wasm in `tests/integration.rs`
+```bash
+make code.build
+make code.test.integration
+```
+
+**Generate contract API**
+
+You may want to generate [JSON Schema](https://json-schema.org) for validating contract API on your client
+```bash
+make code.schema
+```
+
+### Deploying to testnet
+**Create optimized build**
+
+The optimized build is generated longer but is more smaller
+
+Te result is placed in `artifacts/` directory
+```bash
+make code.build.optimize
+```
+
+**Create wallet**
+
+You need a wallet created for smart contract deployment
+```bash
+make chain.wallet wallet=wallet_name
+```
+
+**Load code to chain**
+
+There could be several contracts created with the same code, so load code at first
+```bash
+make chain.store_wasm wallet=wallet_name wasm=artifacts/cosmwasm_template.wasm
+```
+
+**Instantiate contract**
+
+Instantiate contract with JSON message
+
+`code_id` parameter may be provided for instantiating custom code
+```bash
+make chain.contract.instantiate wallet=wallet_name msg='{}'
+```
+
+### Interacting
+As a contract created, you can interact with it
+
+JSON message should contain the method name field and its value is the method signature
+
+**Executing contract**
+
+`contract` parameter may be provided for calling custom contract
+```bash
+make chain.contract.execute wallet=wallet_name \
+msg='{ "register_city": { "name": "Aloha City", "power_level": 7 } }'
+```
+
+**Quering contract**
+
+`wallet` parameter is not needed as query do not waste Gas
+
+`contract` parameter may be provided for calling custom contract
+```bash
+make chain.contract.query msg='{ "look_maintainer": {} }'
+```
 
 
 ## Functional requirements

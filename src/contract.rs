@@ -322,7 +322,7 @@ mod tests {
       env.clone(),
       mock_info("user_4", &[]),
       ExecuteMsg::RegisterPerson {
-        birthday: Birthday { day: None, year: 2002 },
+        birthday: Birthday { day: None, year: 2004 },
         nickname: "Super_Maintainer_887".to_string(),
         email: None,
       },
