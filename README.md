@@ -36,29 +36,29 @@ The project aims to show CosmWasm features and highlight important points
 ## Development environment
 ### Docker
 Docker is the main tool you need:
-[Official installation link](https://docs.docker.com/engine/install)
+[The official installation link](https://docs.docker.com/engine/install)
 
 ### Console tools
-`jq`, `curl`, `make`, `sha3sum`, `tput`, `cat`, `cut` and some other common known tools that are used in `Makefile` 
+`jq` `curl` `make` `sha3sum` `tput` `cat` `cut` and other commonly known tools used in `Makefile`
 
 ### Rust 1.55.0+ (optional)
-Optionally, you can manually install `Rust` on your system following the guide
+Optionally, following the guide, you can manually install `Rust` on your system
 
-Rust is needed as it is the main language for CosmWasm smart contracts developing
+Rust is needed as it is the primary language for CosmWasm smart contracts development
 
 Install [rustup](https://rustup.rs/) if it is missed
 ```
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-It is considered to use stable compiler release
+It is considered using a stable compiler release
 ```bash
 rustup default stable
 ```
 
 Check compiler version and update if needed
 ```bash
-cargo version # run next line if version is lower than 1.55.0+
+cargo version # run the following line if the version is lower than 1.55.0+
 rustup update stable
 ```
 
@@ -80,10 +80,10 @@ git clone https://github.com/CosmWasm/wasmd.git
 cd wasmd
 ```
 
-Fetch releases and switch to latest release compatible release
+Fetch releases and switch to the latest release compatible release
 ```bash
 git fetch --tags
-# replace version if latest release is not compatible 
+# replace version if the latest release is not compatible 
 git checkout $(git describe --tags `git rev-list --tags --max-count=1`)
 ```
 
@@ -107,10 +107,10 @@ cp build/wasmd ~/.local/bin
 - `.wasmd_data/` - `wasmd` home directory, it stores all `wasmd` wallets, configuration, and cache
 
 ### Configuration
-- `.cargo/` - directory stores `rust` configuration and `cargo` aliases
-- `.vscode/` - directory stores `vscode` tools configurations
-- `.editorconfig` - file stores general editor config
-- `.gitignore` - file stores list of files ignored by `git`
+- `.cargo/` - directory storing `rust` configuration and `cargo` aliases
+- `.vscode/` - directory storing `vscode` tools configurations
+- `.editorconfig` - file storing general editor config
+- `.gitignore` - file storing a list of files ignored by `git`
 - `rustfmt.toml` - configuration file for `rust` formatter
 
 ### Outputs
@@ -119,36 +119,36 @@ cp build/wasmd ~/.local/bin
 - `schema/` - directory for JSON contract schema used on frontend
 
 ### Docker
-- `docker_rust/` - directory stores some scripts needed in `rust` container
-- `docker_wasmd/` - directory stores some scripts needed in `wasmd` container
+- `docker_rust/` - directory storing some scripts needed in `rust` container
+- `docker_wasmd/` - directory storing some scripts needed in `wasmd` container
 - `Dockerfile.rust` - configuration file for `rust` container
 - `Dockerfile.wasmd` - configuration file for `wasmd` container
 
 ### Code
-- `examples/` - directory stores useful `rust` scripts that could be run separately from the whole project
+- `examples/` - directory storing useful `rust` scripts could be run separately from the whole project
 - `examples/schema.rs` - script generates JSON schema of the contract
-- `src/` - directory stores project source files
-- `src/contract.rs` - source file stores contract entrypoints, execute/query methods and unit tests
-- `src/error.rs` - source file stores expanded list of contract errors
-- `src/lib.rs` - source file stores list of modules united to the library
-- `src/msg.rs` - source file stores execute/query messages structs
-- `src/state.rs` - source file stores storage layout and help functions
-- `src/utils.rs` - source file stores some structs, types, and general functions
-- `tests/` - directory stores test scripts
-- `tests/integration.rs` - test file for verifying cross contract calls and other chain features
+- `src/` - directory storing contract source files
+- `src/contract.rs` - source file storing contract entrypoints, execute/query methods and unit tests
+- `src/error.rs` - source file storing an expanded list of contract errors
+- `src/lib.rs` - source file storing a list of modules united to the library
+- `src/msg.rs` - source file storing execute/query messages structs
+- `src/state.rs` - source file storing storage layout and help functions
+- `src/utils.rs` - source file storing some structs, types, and general functions
+- `tests/` - directory storing test scripts
+- `tests/integration.rs` - test file for verifying cross-contract calls and other chain features
 
 ### Entrypoint
-- `Makefile` - file stores all command aliases, detailed description is provided in corresponding section
+- `Makefile` - file storing all command aliases, detailed description is provided in the corresponding section
 
 
 ## Makefile entrypoints
 ### General
-- `setup` - build and configure `docker` images, it should be run once on project setup
+- `setup` - build and configure `docker` images should be run once on project setup
 
 ### Contract code
 - `code.build` - build contract code, the output file is not optimized enough for deploying to chain, but it may be used for running integration tests
 - `code.build.optimize` - build contract code for deploying to chain
-- `code.test.integration` - run integration tests, firstly, a wasm file should be built
+- `code.test.integration` - run integration tests, a wasm file should be built before
 - `code.test.unit` - run unit tests provided in contract file
 - `code.test.coverage` - calculate unit tests coverage
 
@@ -157,7 +157,7 @@ cp build/wasmd ~/.local/bin
 - `chain.store_wasm` - load and check wasm code to chain, accept wallet name `wallet` and path to wasm `wasm` parameters
 - `chain.contract.instantiate` - instantiate contract, accept wallet name `wallet`, instantiate message `msg` and optional code ID `code_id` parameters
 - `chain.contract.execute` - execute message on contract, accept wallet name `wallet`, execute message `msg` and optional contract address `contract` parameters
-- `chain.contract.query` - query data from contract, accept query message `msg` and optional contract address `contract` parameters
+- `chain.contract.query` - query data from a contract, accept query message `msg` and optional contract address `contract` parameters
 
 
 ## Code notes
@@ -165,16 +165,16 @@ cp build/wasmd ~/.local/bin
 ```rs
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)] 
 ```
-Derive implements features for a following structure:
-- Serialize - adds possibility to code the struct into JSON (is needed when other contracts try to get the storage)
-- Deserialize - adds possibility to decode the struct from JSON
-- Clone - adds possibility to create duplicate of the struct by calling struct_instance.clone()
-- Debug - adds possibility to use the structure in asserts
-- PartialEq - adds possibility to compare instances of the struct
-- JsonSchema - adds possibility to create JSON schema of the struct
+Derive implements features for the following structure:
+- Serialize - adds a possibility to code the struct into JSON (is needed when other contracts try to get the storage)
+- Deserialize - adds a possibility to decode the struct from JSON
+- Clone - adds a possibility to create a duplicate of the struct by calling struct_instance.clone()
+- Debug - adds a possibility to use the structure in asserts
+- PartialEq - adds a possibility to compare instances of the struct
+- JsonSchema - adds a possibility to create JSON schema of the struct
 
 ### Custom errors
-Custom errors are cool! You may specify your own error text with parameters
+Custom errors are cool! You may specify your error text with parameters
 ```rs
 pub enum CustomError {
   #[error("Your access level is {have:?} and {needed:?} is needed")]
@@ -183,17 +183,17 @@ pub enum CustomError {
 ```
 
 ### Error propagation
-What it is going there?
+What is going on there?
 ```rs
 Ok(to_binary(&query(get_part_param()? + another_part_param)?)?)
 ```
-Error propagation is a great pattern as errors could be processed in one place avoiding panic in local functions
+Error propagation is a great pattern as errors could be processed in one place, avoiding panic in local functions
 
-There is useful `Result<Ok_Type, Err_Type>` type defined, return values are unwrapped by `?` syntax
+There is a useful `Result<Ok_Type, Err_Type>` type defined, return values are unwrapped by `?` syntax
 
-`?` works like unwrap, but does not panic on error, just propagate it to higher level
+`?` works like unwrap but does not panic on error propagating it to a higher level
 
-`?` may convert error type, if result error type implements `Std()` entry, for example:
+`?` may convert error type if the result error type implements `Std()` entry, for example:
 ```rs
 pub enum CustomError {
   #[error("{0}")]
@@ -204,17 +204,17 @@ pub enum CustomError {
 ### Addresses
 There are `Addr` and `CanonicalAddr` types provided for addresses
 
-`Addr` is based on `String` type with some validations and may be received as parameter, caller address `info.sender`, etc
+`Addr` is based on `String` type with some validations and may be received as a parameter, caller address `info.sender`, etc
 
-`CanonicalAddr` is binary type and it is important to store any addresses in contract storage only wrapped to the type as text represetation may be changed in future
+`CanonicalAddr` is a binary type and it is important to store any addresses in contract storage only wrapped to the type as text representation may be changed in future
 
-`String` - it is totally bad idea to store or manipulate addresses wrapped to the type
+`String` - it is a terrible idea to store or manipulate addresses wrapped to the type
 
 ### Contract entrypoints
 ```rs
 #[cfg_attr(not(feature = "library"), entry_point)]
 ```
-Contract has 3 main entrypoints:
+Contracts has 3 main entrypoints:
 - `Instantiate` - should be called once on contract deployment, base storage layout is defined there
 - `Execute` - base set data method, routes other methods
 - `Query` - base view data method, routes other methods
@@ -223,7 +223,7 @@ As `execute` and `query` entrypoints are routers, signatures are defined separat
 ```rs
 #[serde(rename_all = "snake_case")]
 ```
-It is considered using snake case in json message field names
+It is considered using snake case in JSON message field names
 
 ### Storage layout
 ```rs
@@ -232,7 +232,7 @@ Map::new("map_key");
 ```
 CosmWasm implements key-value storage API, you should set unique keys manually for each storage instace
 
-`Item` and `Map` are main storage types, desciption with examples on [crates.io](https://crates.io/crates/cw-storage-plus)
+`Item` and `Map` are the main storage types, description with examples on [crates.io](https://crates.io/crates/cw-storage-plus)
 
 
 ## Getting started
@@ -240,13 +240,13 @@ CosmWasm implements key-value storage API, you should set unique keys manually f
 
 ## Functional requirements
 ### General overview and terms
-Maintainer is a contract manager with the highest access level
+A maintainer is a contract manager with the highest access level
 
-It is possible for anyone to become maintainer in some surcumstances
+It is possible for anyone to become a maintainer in some circumstances
 
 There are 2 main object groups: `People` and `Cities`
 
-Contract maintainer is able to create a `City`
+The contract maintainer is able to create a `City`
 
 Anyone is able to create and update `Person`
 
@@ -382,7 +382,7 @@ Check `Cities` list with metadata
 
 Signature:
 - `start_id: u64` - start `City` identifier
-- `limit: u64` - maximum amount of `Cities` responsed
+- `limit: u64` - maximum amount of `Cities` responded
 
 Fail conditions: `void`
 
@@ -391,7 +391,7 @@ Return:
   - `id: u64` - `City` identifier
   - `name: CityName` - part of `City` metadata
   - `power_level: u8` - part of `City` metadata
-  - `population: u64` - amount of `People` registred in the `City`
+  - `population: u64` - amount of `People` registered in the `City`
 
 **LookPersonCities**
 
@@ -400,7 +400,7 @@ Check `Cities` list with metadata where the `Person` is registered
 Signature:
 - `person: Addr` - address of user created `Person`
 - `start_id: u64` - start `City` identifier
-- `limit: u64` - maximum amount of `Cities` responsed
+- `limit: u64` - maximum amount of `Cities` responded
 
 Fail conditions:
 - `NotFound` - no `Person` created by queried address found
@@ -410,7 +410,7 @@ Return:
   - `id: u64` - `City` identifier
   - `name: CityName` - part of `City` metadata
   - `power_level: u8` - part of `City` metadata
-  - `population: u64` - amount of `People` registred in the `City`
+  - `population: u64` - amount of `People` registered in the `City`
 
 **LookCityPeople**
 
@@ -419,7 +419,7 @@ Check `People` metadata by city where they are registered
 Signature:
 - `city: u64` - `City` identifier
 - `start_id: u64` - start `Person` identifier
-- `limit: u64` - maximum amount of `People` responsed
+- `limit: u64` - maximum amount of `People` responded
 
 Fail conditions:
 - `NotFound` - no `City` with the identifier found
