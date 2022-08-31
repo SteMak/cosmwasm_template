@@ -11,7 +11,7 @@ pub enum ContractError {
   #[error("Inconsistent input data provided")]
   InconsistentData {},
 
-  #[error("You is not maintainer")]
+  #[error("You are not maintainer")]
   Unauthorized {},
 
   #[error("You are already maintainer")]

@@ -8,6 +8,9 @@ use crate::state::{
 };
 use crate::utils::{Birthday, CityName, CityResponse, Config, Email, Nickname, PersonResponse};
 
+const YEAR_IN_SECONDS: u64 = 31556952;
+const DAY_IN_SECONDS: u64 = 86400;
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(deps: DepsMut, _: Env, info: MessageInfo, _: InstantiateMsg) -> Result<Response, ContractError> {
   let config = Config {
@@ -51,9 +54,9 @@ fn execute_become_maintainer(deps: DepsMut, env: Env, info: MessageInfo) -> Resu
       requirement: "You are not crazy enough".to_string(),
     });
   }
-  if (env.block.time.seconds() + 1970 * 31556952)
-    - (person.birthday.year as u64 * 31556952 + person.birthday.day.unwrap_or(366) as u64 * 86400)
-    < 17 * 31556952
+  if (env.block.time.seconds() + 1970 * YEAR_IN_SECONDS)
+    - (person.birthday.year as u64 * YEAR_IN_SECONDS + person.birthday.day.unwrap_or(366) as u64 * DAY_IN_SECONDS)
+    < 17 * YEAR_IN_SECONDS
   {
     return Err(ContractError::InconsistentMaintainer {
       requirement: "You are too young".to_string(),
@@ -97,7 +100,7 @@ fn execute_register_person(
       return Err(ContractError::InconsistentData {});
     }
   }
-  if birthday.year < 1756 || birthday.year > (env.block.time.seconds() / 31556952) as u16 + 1970 {
+  if birthday.year < 1756 || birthday.year > (env.block.time.seconds() / YEAR_IN_SECONDS) as u16 + 1970 {
     return Err(ContractError::InconsistentData {});
   }
 
@@ -277,7 +280,7 @@ mod tests {
 
     let mut env = mock_env();
     env.block.height = 887;
-    env.block.time = Timestamp::from_seconds(31556952 * 52 + 31556952 / 2); // in middle of 2022
+    env.block.time = Timestamp::from_seconds(YEAR_IN_SECONDS * 52 + YEAR_IN_SECONDS / 2); // in middle of 2022
 
     instantiate(deps.as_mut(), mock_env(), mock_info("creator", &[]), InstantiateMsg {}).unwrap();
 
@@ -452,7 +455,7 @@ mod tests {
 
     let mut env = mock_env();
     env.block.height = 887;
-    env.block.time = Timestamp::from_seconds(31556952 * 52 + 31556952 / 2); // in middle of 2022
+    env.block.time = Timestamp::from_seconds(YEAR_IN_SECONDS * 52 + YEAR_IN_SECONDS / 2); // in middle of 2022
 
     instantiate(deps.as_mut(), mock_env(), mock_info("creator", &[]), InstantiateMsg {}).unwrap();
 

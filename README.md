@@ -27,6 +27,10 @@ The project aims to show CosmWasm features and highlight important points
     - [Storage layout](#storage-layout)
   - [Getting started](#getting-started)
   - [Functional requirements](#functional-requirements)
+    - [General overview and terms](#general-overview-and-terms)
+    - [Instantiate method](#instantiate-method)
+    - [Execute (set data) methods](#execute-set-data-methods)
+    - [Query (view data) methods](#query-view-data-methods)
 
 
 ## Development environment
@@ -187,7 +191,7 @@ Error propagation is a great pattern as errors could be processed in one place a
 
 There is useful `Result<Ok_Type, Err_Type>` type defined, return values are unwrapped by `?` syntax
 
-`?` works like unwrap, but doesn't panic on error, just propagate it to higher level
+`?` works like unwrap, but does not panic on error, just propagate it to higher level
 
 `?` may convert error type, if result error type implements `Std()` entry, for example:
 ```rs
@@ -222,9 +226,208 @@ As `execute` and `query` entrypoints are routers, signatures are defined separat
 It is considered using snake case in json message field names
 
 ### Storage layout
+```rs
+Item::new("item_key");
+Map::new("map_key");
+```
+CosmWasm implements key-value storage API, you should set unique keys manually for each storage instace
+
+`Item` and `Map` are main storage types, desciption with examples on [crates.io](https://crates.io/crates/cw-storage-plus)
 
 
 ## Getting started
 
 
 ## Functional requirements
+### General overview and terms
+Maintainer is a contract manager with the highest access level
+
+It is possible for anyone to become maintainer in some surcumstances
+
+There are 2 main object groups: `People` and `Cities`
+
+Contract maintainer is able to create a `City`
+
+Anyone is able to create and update `Person`
+
+Anyone is able to register/unregister his `Person` in/from any `City`
+
+### Instantiate method
+Set caller maintainer
+
+Signature: `void`
+
+Fail conditions: `void`
+
+Return: `void`
+
+### Execute (set data) methods
+**RegisterCity**
+
+Add new `City` providing metadata
+
+Signature:
+- `name: CityName` - part of `City` metadata
+- `power_level: u8` - part of `City` metadata
+
+Fail conditions:
+- `Unauthorized` - caller is not maintainer
+
+Return: `void`
+
+**RegisterPerson**
+
+Add new `Person` providing metadata
+
+Signature:
+- `birthday: Birthday` - part of `Person` metadata
+- `nickname: Nickname` - part of `Person` metadata
+- `email: Option<Email>` - part of `Person` metadata
+
+Fail conditions:
+- `InconsistentData` - `!(1 <= birthday.day <= 366)`
+- `InconsistentData` - `!(1756 <= birthday.year <= current year)`
+- `PersonAlreadyRegistered` - caller already created a `Person`
+
+Return: `void`
+
+**UpdatePerson**
+
+Update `Person` metadata
+
+Signature:
+- `nickname: Nickname` - part of `Person` metadata
+- `email: Option<Email>` - part of `Person` metadata
+
+Fail conditions:
+- `NotFound` - no `Person` created by caller found
+
+Return: `void`
+
+**RegisterInCity**
+
+Register `Person` in `City`
+
+Signature:
+- `city_id: u64` - `City` identifier
+
+Fail conditions:
+- `NotFound` - no `Person` created by caller found
+- `NotFound` - no `City` with the identifier found
+- `PersonAlreadyRegisteredInCity` - `Person` is already registered in the `City`
+
+Return: `void`
+
+**UnregisterFromCity**
+
+Unregister `Person` from `City`
+
+Signature:
+- `city_id: u64` - `City` identifier
+
+Fail conditions:
+- `NotFound` - no `Person` created by caller found
+- `NotFound` - no `City` with the identifier found
+- `NotFound` - `Person` is not registered in the `City`
+
+Return: `void`
+
+**BecomeMaintainer**
+
+Set caller maintainer
+
+Signature: `void`
+
+Fail conditions:
+- `AlreadyMaintainer` - caller is maintainer
+- `NotFound` - no `Person` created by caller found
+- `InconsistentMaintainer` - `Person` nickname is not `Super_Maintainer_887`
+- `InconsistentMaintainer` - `Person` age is under `17`
+
+Return: `void`
+
+### Query (view data) methods
+**LookMaintainer**
+
+Check who is maintainer
+
+Signature: `void`
+
+Fail conditions: `void`
+
+Return:
+- `maintainer: Addr` - maintainer address
+
+**LookPerson**
+
+Check `Person` metadata
+
+Signature:
+- `person: Addr` - address of user created `Person`
+
+Fail conditions:
+- `NotFound` - no `Person` created by queried address found
+
+Return:
+- `person: PersonResponse` -
+  - `address: Addr` - queried address
+  - `birthday: Birthday` - part of `Person` metadata
+  - `nickname: Nickname` - part of `Person` metadata
+  - `email: Option<Email>` - part of `Person` metadata
+  - `resident_times: u64` - amount of `Cities` where `Person` is registered
+
+**LookCities**
+
+Check `Cities` list with metadata
+
+Signature:
+- `start_id: u64` - start `City` identifier
+- `limit: u64` - maximum amount of `Cities` responsed
+
+Fail conditions: `void`
+
+Return:
+- `cities: Vec<CityResponse>` -
+  - `id: u64` - `City` identifier
+  - `name: CityName` - part of `City` metadata
+  - `power_level: u8` - part of `City` metadata
+  - `population: u64` - amount of `People` registred in the `City`
+
+**LookPersonCities**
+
+Check `Cities` list with metadata where the `Person` is registered
+
+Signature:
+- `person: Addr` - address of user created `Person`
+- `start_id: u64` - start `City` identifier
+- `limit: u64` - maximum amount of `Cities` responsed
+
+Fail conditions:
+- `NotFound` - no `Person` created by queried address found
+
+Return:
+- `cities: Vec<CityResponse>` -
+  - `id: u64` - `City` identifier
+  - `name: CityName` - part of `City` metadata
+  - `power_level: u8` - part of `City` metadata
+  - `population: u64` - amount of `People` registred in the `City`
+
+**LookCityPeople**
+
+Check `People` metadata by city where they are registered
+
+Signature:
+- `city: u64` - `City` identifier
+- `start_id: u64` - start `Person` identifier
+- `limit: u64` - maximum amount of `People` responsed
+
+Fail conditions:
+- `NotFound` - no `City` with the identifier found
+
+Return:
+- `people: Vec<PersonResponse>` -
+  - `address: Addr` - queried address
+  - `birthday: Birthday` - part of `Person` metadata
+  - `nickname: Nickname` - part of `Person` metadata
+  - `email: Option<Email>` - part of `Person` metadata
+  - `resident_times: u64` - amount of `Cities` where `Person` is registered
