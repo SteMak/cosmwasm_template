@@ -6,7 +6,7 @@ use cw_storage_plus::{Item, Map};
 
 // The crate imports are responsible for import from anothe project file
 use crate::{
-  error::ContractError,
+  error::{wrap_not_found, ContractError},
   utils::{Birthday, City, Config, Person},
 };
 
@@ -34,10 +34,10 @@ const PERSON_IN_CITY_ID_AND_CITY_IN_PERSON_ID_BY_PERSON_ADDRESS_AND_CITY_ID: Map
 
 // Helper functions for loading person/city data
 pub fn get_person(store: &dyn Storage, addr: CanonicalAddr) -> Result<Person, ContractError> {
-  Ok(PERSON_BY_ADDRESS.load(store, &addr)?)
+  Ok(wrap_not_found(PERSON_BY_ADDRESS.load(store, &addr))?)
 }
 pub fn get_city(store: &dyn Storage, city_id: u64) -> Result<City, ContractError> {
-  Ok(CITY_BY_ID.load(store, city_id)?)
+  Ok(wrap_not_found(CITY_BY_ID.load(store, city_id))?)
 }
 
 // Helper functions for accessing person/city from city/person data
@@ -76,9 +76,11 @@ fn crement_person_and_city_counters(
   city_id: u64,
   increment: bool,
 ) -> Result<(), ContractError> {
+  // Load
   let mut person = get_person(store, addr.clone())?;
   let mut city = get_city(store, city_id)?;
 
+  // Change
   if increment {
     person.cities_count += 1;
     city.members_count += 1;
@@ -87,6 +89,7 @@ fn crement_person_and_city_counters(
     city.members_count -= 1;
   }
 
+  // Save
   PERSON_BY_ADDRESS.save(store, &addr, &person)?;
   CITY_BY_ID.save(store, city_id, &city)?;
 
@@ -161,6 +164,7 @@ pub fn register_in_city(store: &mut dyn Storage, addr: CanonicalAddr, city_id: u
   let person = get_person(store, addr.clone())?;
   let city = get_city(store, city_id)?;
 
+  // There should be no data loaded by may_load if the user is not registered yet
   if let Some((_, _)) =
     PERSON_IN_CITY_ID_AND_CITY_IN_PERSON_ID_BY_PERSON_ADDRESS_AND_CITY_ID.may_load(store, (&addr, city_id))?
   {
@@ -199,12 +203,16 @@ pub fn unregister_from_city(store: &mut dyn Storage, addr: CanonicalAddr, city_i
 
   // Replace current person_in_city and city_in_person with the last ones
   if person_in_city < city.members_count - 1 {
+    // Get last person address
     let last_pic_address =
       PERSON_ADDRESS_BY_CITY_ID_AND_PERSON_IN_CITY_ID.load(store, (city_id, city.members_count - 1))?;
+    // Set it to free slot
     PERSON_ADDRESS_BY_CITY_ID_AND_PERSON_IN_CITY_ID.save(store, (city_id, person_in_city), &last_pic_address)?;
 
+    // Get city index in the last person cities list
     let (_, city_id_of_moved_user) = PERSON_IN_CITY_ID_AND_CITY_IN_PERSON_ID_BY_PERSON_ADDRESS_AND_CITY_ID
       .load(store, (&last_pic_address, city_id))?;
+    // Update person - city link with new person address position
     PERSON_IN_CITY_ID_AND_CITY_IN_PERSON_ID_BY_PERSON_ADDRESS_AND_CITY_ID.save(
       store,
       (&last_pic_address, city_id),
@@ -212,11 +220,15 @@ pub fn unregister_from_city(store: &mut dyn Storage, addr: CanonicalAddr, city_i
     )?;
   }
   if city_in_person < person.cities_count - 1 {
+    // Get last city id
     let last_cip_id = CITY_ID_BY_PERSON_ADDRESS_AND_CITY_IN_PERSON_ID.load(store, (&addr, person.cities_count - 1))?;
+    // Set it to free slot
     CITY_ID_BY_PERSON_ADDRESS_AND_CITY_IN_PERSON_ID.save(store, (&addr, city_in_person), &last_cip_id)?;
 
+    // Get person index in the last city people list
     let (person_id_of_moved_city, _) =
       PERSON_IN_CITY_ID_AND_CITY_IN_PERSON_ID_BY_PERSON_ADDRESS_AND_CITY_ID.load(store, (&addr, last_cip_id))?;
+    // Update person - city link with new city id position
     PERSON_IN_CITY_ID_AND_CITY_IN_PERSON_ID_BY_PERSON_ADDRESS_AND_CITY_ID.save(
       store,
       (&addr, last_cip_id),

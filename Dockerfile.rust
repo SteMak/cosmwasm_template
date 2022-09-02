@@ -1,17 +1,25 @@
 FROM rust:1.63.0
 
+# Use user uid for creating user with regular permissions
 ARG UID=8877
 RUN useradd -u $UID wasm_user
 USER wasm_user
 
+# Install wasm target
 COPY info_to_stdout.bash .
 RUN ["/bin/bash", "-c", "rustup target add wasm32-unknown-unknown 2> >(./info_to_stdout.bash)"]
+
+# Install tarpaulin coverage module
 RUN cargo install -q cargo-tarpaulin
 
+# Provide compiler env variables
 ENV CARGO_HOME /usr/cosmwasm_docker/.cargo_cache
 ENV CARGO_TARGET_DIR /usr/cosmwasm_docker/.cargo_target
 ENV CARGO_BUILD_TARGET_DIR /usr/cosmwasm_docker/.cargo_target
 ENV CARGO_TERM_COLOR always
+
+# Make terminal color
 ENV TERM xterm-256color
 
+# Set working directory
 WORKDIR /usr/cosmwasm_docker

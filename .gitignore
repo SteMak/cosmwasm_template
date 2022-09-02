@@ -1,13 +1,16 @@
+# System cache
 /.cargo_cache
 /.cargo_target
 /.cargo_analyzer
 /.optimize_cache
 /.wasmd_data
 
+# Build artifacts
 /artifacts
 /coverage
 /schema
 
+# Default rust project ignore
 **/*.rs.bk
 *.iml
 .idea

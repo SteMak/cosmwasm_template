@@ -1,8 +1,24 @@
-use cosmwasm_std::StdError;
+// The file is responsible for storing list of custom error types
+
+use cosmwasm_std::{StdError, StdResult};
 use thiserror::Error;
 
 use crate::utils::{CityName, Nickname};
 
+// Helper function for wrapping StdError::NotFound to ContractError::NotFound
+pub fn wrap_not_found<T>(result: StdResult<T>) -> Result<T, ContractError> {
+  match result {
+    Ok(data) => Ok(data),
+    Err(err) => match err {
+      StdError::NotFound { kind } => Err(ContractError::NotFound {
+        kind: kind.split("::").last().unwrap_or(&kind).to_string(),
+      }),
+      _ => Err(ContractError::Std(err)),
+    },
+  }
+}
+
+// ContractError enum stores error types with text representation
 #[derive(Error, Debug)]
 pub enum ContractError {
   #[error("{0}")]
@@ -17,9 +33,14 @@ pub enum ContractError {
   #[error("You are already maintainer")]
   AlreadyMaintainer {},
 
-  #[error("You don't satisfy maintainer requirements ({requirement:?})")]
+  // Use { field } if you are sure that the field is not empty, results in 'error start field_value end'
+  #[error("You don't satisfy maintainer requirements ({requirement})")]
   InconsistentMaintainer { requirement: String },
 
+  #[error("{kind} with this identifier is not found")]
+  NotFound { kind: String },
+
+  // Use { field:? } if field could be empty, results in 'error start "field_value" end'
   #[error("Person with the address already exists (nickname: {nickname:?})")]
   PersonAlreadyRegistered { nickname: Nickname },
 

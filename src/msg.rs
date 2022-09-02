@@ -1,12 +1,19 @@
+// The file is responsible for storing all message structs
+
 use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::utils::{Birthday, CityName, CityResponse, Email, Nickname, PersonResponse};
 
+// Instantiate message
+// JSON: '{ "virtual_field": "virtual answer", etc. }'
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
 pub struct InstantiateMsg {}
 
+// Execute message
+// JSON: '{ "message_type": { "virtual_field": "virtual answer", etc. } }'
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
@@ -34,6 +41,8 @@ pub enum ExecuteMsg {
   BecomeMaintainer {},
 }
 
+// Query message
+// JSON: '{ "message_type": { "virtual_field": "virtual answer", etc. } }'
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
@@ -46,6 +55,8 @@ pub enum QueryMsg {
   LookCityPeople { city: u64, start_id: u64, limit: u64 },
 }
 
+// Response message
+// JSON: '{ "message_type": { "virtual_field": "virtual answer", etc. } }'
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ResponseMsg {

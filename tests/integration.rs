@@ -1,20 +1,18 @@
 // This integration test tries to run and call the generated wasm.
-// It depends on a Wasm build being available, which you can create with `cargo wasm`.
-// Then running `cargo integration-test` will validate we can properly call into that generated Wasm.
-//
+// It depends on a Wasm build being available, which you can create with `make code.build[.optimize]`.
+// Then running `make code.test.integration` will validate we can properly call into that generated Wasm.
+
 // You can easily convert unit tests to integration tests as follows:
 // 1. Copy them over verbatim
 // 2. Then change
-//      let mut deps = mock_dependencies(20, &[]);
+//      `let mut deps = mock_dependencies(20, &[]);`
 //    to
-//      let mut deps = mock_instance(WASM, &[]);
+//      `let mut deps = mock_instance(WASM, &[]);`
 // 3. If you access raw storage, where ever you see something like:
-//      deps.storage.get(CONFIG_KEY).expect("no data stored");
-//    replace it with:
-//      deps.with_storage(|store| {
-//          let data = store.get(CONFIG_KEY).expect("no data stored");
-//      });
-// 4. Anywhere you see query(&deps, ...) you must replace it with query(&mut deps, ...)
+//     `deps.storage.get(CONFIG_KEY).expect("no data stored");`
+//   replace it with:
+//     `deps.with_storage(|store| { let data = store.get(CONFIG_KEY).expect("no data stored"); });`
+// 4. Anywhere you see `query(&deps, ...)` you must replace it with `query(&mut deps, ...)`
 
 use cosmwasm_std::{
   from_binary, Addr, BlockInfo, ContractInfo, Env, MessageInfo, Response, Timestamp, TransactionInfo,
@@ -27,11 +25,12 @@ use cosmwasm_template::{
   utils::{Birthday, CityResponse, PersonResponse},
 };
 
-// This line will test the output of cargo wasm
+// This line will test the output of `make code.build`
 static WASM: &[u8] = include_bytes!("../.cargo_target/wasm32-unknown-unknown/release/cosmwasm_template.wasm");
-// You can uncomment this line instead to test productionified build from rust-optimizer
+// This line will test the output of `make code.build.optimize`
 // static WASM: &[u8] = include_bytes!("../artifacts/cosmwasm_template.wasm");
 
+// Generate `env`, `info`
 fn mock_env_info_height(signer: &str, height: u64, time: u64) -> (Env, MessageInfo) {
   let env = Env {
     block: BlockInfo {
@@ -50,14 +49,19 @@ fn mock_env_info_height(signer: &str, height: u64, time: u64) -> (Env, MessageIn
 
 #[test]
 fn initialization() {
+  // Get contract & env
   let mut deps = mock_instance(WASM, &[]);
-  let msg = InstantiateMsg {};
   let (env, info) = mock_env_info_height("creator", 887, 31556952 * 52 + 31556952 / 2); // in middle of 2022
-  let res: Response = instantiate(&mut deps, env.clone(), info, msg).unwrap();
+
+  // Instantiate contract
+  let res: Response = instantiate(&mut deps, env.clone(), info, InstantiateMsg {}).unwrap();
   assert_eq!(0, res.messages.len());
 
+  // Get maintainer
   let maintainer: ResponseMsg =
     from_binary(&query(&mut deps, env.clone(), QueryMsg::LookMaintainer {}).unwrap()).unwrap();
+
+  // Check maintainer
   assert_eq!(
     maintainer,
     ResponseMsg::LookMaintainer {
@@ -69,12 +73,11 @@ fn initialization() {
 #[test]
 fn person_in_city_registration() {
   let mut deps = mock_instance(WASM, &[]);
-  let msg = InstantiateMsg {};
   let (env_1, info_1) = mock_env_info_height("creator", 887, 31556952 * 52 + 31556952 / 2);
   let (env_2, info_2) = mock_env_info_height("user_2", 887, 31556952 * 52 + 31556952 / 2);
   let (env_3, info_3) = mock_env_info_height("user_3", 887, 31556952 * 52 + 31556952 / 2);
 
-  let _: Response = instantiate(&mut deps, env_1.clone(), info_1.clone(), msg).unwrap();
+  let _: Response = instantiate(&mut deps, env_1.clone(), info_1.clone(), InstantiateMsg {}).unwrap();
 
   let _: Response = execute(
     &mut deps,
