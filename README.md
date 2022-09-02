@@ -350,7 +350,9 @@ make chain.contract.query msg='{ "look_maintainer": {} }'
 ### General overview and terms
 A maintainer is a contract manager with the highest access level
 
-It is possible for anyone to become a maintainer in some circumstances
+Anyone is able to become a maintainer if corresponding registered person is 17+ years old and person name is "Super_Maintainer_887"
+
+It is not essential to keep the requirements satisfied after caller became maintainer
 
 There are 2 main object groups: `People` and `Cities`
 

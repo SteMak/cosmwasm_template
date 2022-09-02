@@ -6,6 +6,8 @@ use thiserror::Error;
 use crate::utils::{CityName, Nickname};
 
 // Helper function for wrapping StdError::NotFound to ContractError::NotFound
+// <T> is generic for any Ok(result) data type
+
 pub fn wrap_not_found<T>(result: StdResult<T>) -> Result<T, ContractError> {
   match result {
     Ok(data) => Ok(data),
@@ -21,6 +23,7 @@ pub fn wrap_not_found<T>(result: StdResult<T>) -> Result<T, ContractError> {
 // ContractError enum stores error types with text representation
 #[derive(Error, Debug)]
 pub enum ContractError {
+  // Std() is used for wrapping StdError to ContractError
   #[error("{0}")]
   Std(#[from] StdError),
 
