@@ -43,7 +43,7 @@ The project aims to show `CosmWasm` features and highlight important points
 [installation link](https://docs.docker.com/engine/install)
 
 ### Console tools
-`jq` `curl` `make` `sha3sum` `tput` `cat` `cut` and other commonly known tools used in `Makefile`
+`git` `jq` `curl` `make` `sha3sum` `sha3sum` `tput` `cat` `cut` and other commonly known tools used in `Makefile`
 
 ### Rust 1.55.0+ (optional)
 Optionally, following the guide, you can manually install `Rust` on your system
