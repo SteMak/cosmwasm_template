@@ -10,26 +10,25 @@ CHAIN_TXFLAG="--chain-id $(CHAIN_ID) --gas-prices 0.25$(CHAIN_FEE_DENOM) --gas a
 
 # Build rust container
 docker_container_build_rust:
-	@docker build -t $(CONTAINER_RUST) --build-arg UID=$(CURRENT_UID) -f $(DIR)/Dockerfile.rust $(DIR)/docker_rust
+	@sudo docker build -t $(CONTAINER_RUST) -f $(DIR)/Dockerfile.rust $(DIR)/docker_rust
 	@tput setaf 2; echo "==> Dockerfile.rust built"; tput sgr0
 	@echo
 
 # Build wasmd container
 docker_container_build_wasmd:
-	@docker build -t $(CONTAINER_WASMD) --build-arg UID=$(CURRENT_UID) -f $(DIR)/Dockerfile.wasmd $(DIR)/docker_wasmd
+	@sudo docker build -t $(CONTAINER_WASMD) -f $(DIR)/Dockerfile.wasmd $(DIR)/docker_wasmd
 	@tput setaf 2; echo "==> Dockerfile.wasmd built"; tput sgr0
 	@echo
 
 # Cache rust dependencies
 fetch_cargo_dependencies:
-	@docker run --rm --volume $(DIR):/usr/cosmwasm_docker $(CONTAINER_RUST) cargo fetch
+	@sudo docker run --rm --volume $(DIR):/usr/cosmwasm_docker $(CONTAINER_RUST) cargo fetch
 	@tput setaf 2; echo "==> Cargo dependencies fetched"; tput sgr0
 	@echo
 
 # Create wasmd cache dir, configure keyring to test
 set_wasmd_config:
-	@mkdir -p $(DIR)/.wasmd_data
-	@docker run --rm --volume $(DIR)/.wasmd_data:/home/wasm_user/.wasmd $(CONTAINER_WASMD) wasmd config keyring-backend test
+	@sudo docker run --rm --volume $(DIR)/.wasmd_data:/root/.wasmd $(CONTAINER_WASMD) wasmd config keyring-backend test
 	@tput setaf 2; echo "==> Wasmd configured"; tput sgr0
 	@echo
 
@@ -40,15 +39,19 @@ setup: \
 
 # Aliases to rust
 code.build:
-	@docker run --rm --volume $(DIR):/usr/cosmwasm_docker $(CONTAINER_RUST) cargo wasm
+	@sudo docker run --rm --volume $(DIR):/usr/cosmwasm_docker $(CONTAINER_RUST) cargo wasm
 code.test.unit:
-	@docker run --rm --volume $(DIR):/usr/cosmwasm_docker $(CONTAINER_RUST) cargo unit-test -- --color=always
+	@sudo docker run --rm --volume $(DIR):/usr/cosmwasm_docker $(CONTAINER_RUST) cargo unit-test -- --color=always
 code.test.integration:
-	@docker run --rm --volume $(DIR):/usr/cosmwasm_docker $(CONTAINER_RUST) cargo integration-test -- --color=always
+	@sudo docker run --rm --volume $(DIR):/usr/cosmwasm_docker $(CONTAINER_RUST) cargo integration-test -- --color=always
 code.test.coverage:
-	@docker run --rm --volume $(DIR):/usr/cosmwasm_docker --security-opt seccomp=unconfined $(CONTAINER_RUST) cargo coverage --color=always
+	@sudo rm -rf $(CURRENT_UID) $(DIR)/coverage
+	@sudo docker run --rm --volume $(DIR):/usr/cosmwasm_docker --security-opt seccomp=unconfined $(CONTAINER_RUST) cargo coverage --color=always
+	@sudo chown -R $(CURRENT_UID) $(DIR)/coverage
 code.schema:
-	@docker run --rm --volume $(DIR):/usr/cosmwasm_docker $(CONTAINER_RUST) cargo schema
+	@sudo rm -rf $(CURRENT_UID) $(DIR)/schema
+	@sudo docker run --rm --volume $(DIR):/usr/cosmwasm_docker $(CONTAINER_RUST) cargo schema
+	@sudo chown -R $(CURRENT_UID) $(DIR)/schema
 
 # Run optimize build with cosmwasm/rust-optimizer
 code.build.optimize:
@@ -67,7 +70,7 @@ code.build.optimize:
 	@echo
 
 # Run optimizer
-	@docker run --rm \
+	@sudo docker run --rm \
 		-e CARGO_TERM_COLOR=always \
 		--volume $(DIR)/.optimize_cache:/code \
 		--volume $(CONTAINER_RUST)_cache:/code/target \
@@ -96,7 +99,7 @@ chain.wallet.create:
 ifndef wallet
 	$(error "Error: missed wallet name, try 'make chain.wallet.create wallet=WALLET_NAME'")
 endif
-	@docker run --rm -it --volume $(DIR)/.wasmd_data:/home/wasm_user/.wasmd $(CONTAINER_WASMD) wasmd keys add $(wallet)
+	@sudo docker run --rm -it --volume $(DIR)/.wasmd_data:/root/.wasmd $(CONTAINER_WASMD) wasmd keys add $(wallet)
 	@tput setaf 2; echo "==> Wallet created"; tput sgr0
 	@echo
 
@@ -105,7 +108,7 @@ chain.wallet.fund:
 ifndef wallet
 	$(error "Error: missed wallet name, try 'make chain.wallet.fund wallet=WALLET_NAME'")
 endif
-	$(eval address := $(shell docker run --rm --volume $(DIR)/.wasmd_data:/home/wasm_user/.wasmd $(CONTAINER_WASMD) wasmd keys show -a $(wallet)))
+	$(eval address := $(shell sudo docker run --rm --volume $(DIR)/.wasmd_data:/root/.wasmd $(CONTAINER_WASMD) wasmd keys show -a $(wallet)))
 	@curl -X POST --header "Content-Type: application/json" --fail \
 		--data '{ "denom": "$(CHAIN_FEE_DENOM)", "address": "$(address)" }' $(CHAIN_FAUCET)/credit
 	@echo
@@ -123,14 +126,19 @@ endif
 ifndef wasm
 	$(error "Error: missed path to wasm, try 'make chain.store_wasm.push_code wallet=WALLET_NAME wasm=PATH_TO_WASM'")
 endif
-	@docker run --rm \
+	@sudo touch $(DIR)/.wasmd_data/cached_code_resp
+	@sudo touch $(DIR)/.wasmd_data/cached_code_id
+	@sudo chown $(CURRENT_UID) $(DIR)/.wasmd_data/cached_code_resp
+	@sudo chown $(CURRENT_UID) $(DIR)/.wasmd_data/cached_code_id
+
+	@sudo docker run --rm \
 		--volume $(PWD):/usr/scope \
-		--volume $(DIR)/.wasmd_data:/home/wasm_user/.wasmd \
+		--volume $(DIR)/.wasmd_data:/root/.wasmd \
 		$(CONTAINER_WASMD) \
 	wasmd tx wasm store $(wasm) --from $(wallet) --chain-id $(CHAIN_ID) \
 		--gas-prices 0.25$(CHAIN_FEE_DENOM) --gas auto --gas-adjustment 1.3 -y --output json -b block > $(DIR)/.wasmd_data/cached_code_resp
 	@cat $(DIR)/.wasmd_data/cached_code_resp | jq -r '.logs[0].events[-1].attributes[0].value' > $(DIR)/.wasmd_data/cached_code_id
-	@rm $(DIR)/.wasmd_data/cached_code_resp
+	@sudo rm $(DIR)/.wasmd_data/cached_code_resp
 
 	@tput setaf 2; echo "==> Code pushed"; tput sgr0
 	@echo
@@ -139,19 +147,19 @@ endif
 chain.store_wasm.download_code:
 # Use cached code id if the parameter is missed
 	$(eval cached_code_id := $(shell cat $(DIR)/.wasmd_data/cached_code_id 2>/dev/null))
-	@if [ "$(code_id)" == "$(EMP)" ] && [ "$(cached_code_id)" == "$(EMP)" ]; then \
+	@if [ "$(code_id)" = "$(EMP)" ] && [ "$(cached_code_id)" = "$(EMP)" ]; then \
 		echo "Error: missing cached code id or code_id parameter"; \
 		exit 1; \
 	fi
-	@if [ "$(code_id)" == "$(EMP)" ]; then \
+	@if [ "$(code_id)" = "$(EMP)" ]; then \
 		echo "Reading last loaded code id: $(cached_code_id)"; \
 		$(eval code_id = $(shell cat $(DIR)/.wasmd_data/cached_code_id 2>/dev/null)) \
 	fi
 
-	@docker run --rm \
-		--volume $(DIR)/.wasmd_data:/home/wasm_user/.wasmd \
+	@sudo docker run --rm \
+		--volume $(DIR)/.wasmd_data:/root/.wasmd \
 		$(CONTAINER_WASMD) \
-	wasmd query wasm code $(code_id) /home/wasm_user/.wasmd/cached_code.wasm
+	wasmd query wasm code $(code_id) /root/.wasmd/cached_code.wasm | sed 's/\/root\/.wasmd/.wasmd_data/g'
 
 	@tput setaf 2; echo "==> Code downloaded"; tput sgr0
 	@echo
@@ -161,14 +169,15 @@ chain.store_wasm.compare_code:
 ifndef wasm
 	$(error "Error: missed path to wasm, try 'make chain.store_wasm.compare_code wasm=PATH_TO_WASM code_id=CODE_ID'")
 endif
-	$(eval sha_1 := $(shell sha3sum $(DIR)/.wasmd_data/cached_code.wasm 2>/dev/null | cut -d " " -f 1))
-	$(eval sha_2 := $(shell sha3sum $(wasm) 2>/dev/null | cut -d " " -f 1))
+	$(eval sha_1 := $(shell sudo sha3sum $(DIR)/.wasmd_data/cached_code.wasm 2>/dev/null | cut -d " " -f 1))
+	$(eval sha_2 := $(shell sudo sha3sum $(wasm) 2>/dev/null | cut -d " " -f 1))
 
-	@if [ "$(sha_1)" == "$(EMP)" ]; then \
+	@if [ "$(sha_1)" = "$(EMP)" ]; then \
 		echo "Error: missing cached wasm file, download it first"; \
+		echo "Check if sha3sum command is available"; \
 		exit 1; \
 	fi
-	@if [ "$(sha_2)" == "$(EMP)" ]; then \
+	@if [ "$(sha_2)" = "$(EMP)" ]; then \
 		echo "Error: bad wasm file provided"; \
 		exit 1; \
 	fi
@@ -192,22 +201,27 @@ ifndef wallet
 endif
 # Use cached code id if the parameter is missed
 	$(eval cached_code_id := $(shell cat $(DIR)/.wasmd_data/cached_code_id 2>/dev/null))
-	@if [ "$(code_id)" == "$(EMP)" ] && [ "$(cached_code_id)" == "$(EMP)" ]; then \
+	@if [ "$(code_id)" = "$(EMP)" ] && [ "$(cached_code_id)" = "$(EMP)" ]; then \
 		echo "Error: missing cached code id or code_id parameter"; \
 		exit 1; \
 	fi
-	@if [ "$(code_id)" == "$(EMP)" ]; then \
+	@if [ "$(code_id)" = "$(EMP)" ]; then \
 		echo "Reading last loaded code id: $(cached_code_id)"; \
 		$(eval code_id = $(shell cat $(DIR)/.wasmd_data/cached_code_id 2>/dev/null)) \
 	fi
 
-	@docker run --rm \
-		--volume $(DIR)/.wasmd_data:/home/wasm_user/.wasmd \
+	@sudo touch $(DIR)/.wasmd_data/cached_init_resp
+	@sudo touch $(DIR)/.wasmd_data/cached_address
+	@sudo chown $(CURRENT_UID) $(DIR)/.wasmd_data/cached_init_resp
+	@sudo chown $(CURRENT_UID) $(DIR)/.wasmd_data/cached_address
+
+	@sudo docker run --rm \
+		--volume $(DIR)/.wasmd_data:/root/.wasmd \
 		$(CONTAINER_WASMD) \
 	wasmd tx wasm instantiate $(code_id) $(msg) --from $(wallet) --label "People & Cities" --chain-id $(CHAIN_ID) \
 		--gas-prices 0.25$(CHAIN_FEE_DENOM) --gas auto --gas-adjustment 1.3 -y --no-admin --output json -b block > $(DIR)/.wasmd_data/cached_init_resp
 	@cat $(DIR)/.wasmd_data/cached_init_resp | jq -r '.logs[0].events[0].attributes[0].value' > $(DIR)/.wasmd_data/cached_address
-	@rm $(DIR)/.wasmd_data/cached_init_resp
+	@sudo rm $(DIR)/.wasmd_data/cached_init_resp
 
 	@tput setaf 2; echo "==> Contract instantiated"; tput sgr0
 	@echo
@@ -222,17 +236,22 @@ ifndef wallet
 endif
 # Use cached contract adderss if the parameter is missed
 	$(eval cached_contract := $(shell cat $(DIR)/.wasmd_data/cached_address 2>/dev/null))
-	@if [ "$(contract)" == "$(EMP)" ] && [ "$(cached_contract)" == "$(EMP)" ]; then \
+	@if [ "$(contract)" = "$(EMP)" ] && [ "$(cached_contract)" = "$(EMP)" ]; then \
 		echo "Error: missing cached address or contract parameter"; \
 		exit 1; \
 	fi
-	@if [ "$(contract)" == "$(EMP)" ]; then \
+	@if [ "$(contract)" = "$(EMP)" ]; then \
 		echo "Reading last instantiated contract: $(cached_contract)"; \
 		$(eval contract = $(shell cat $(DIR)/.wasmd_data/cached_address 2>/dev/null)) \
 	fi
+
+	@sudo touch $(DIR)/.wasmd_data/cached_execute_resp
+	@sudo touch $(DIR)/.wasmd_data/cached_execute_hash
+	@sudo chown $(CURRENT_UID) $(DIR)/.wasmd_data/cached_execute_resp
+	@sudo chown $(CURRENT_UID) $(DIR)/.wasmd_data/cached_execute_hash
 	
-	@docker run --rm \
-		--volume $(DIR)/.wasmd_data:/home/wasm_user/.wasmd \
+	@sudo docker run --rm \
+		--volume $(DIR)/.wasmd_data:/root/.wasmd \
 		$(CONTAINER_WASMD) \
 	wasmd tx wasm execute $(contract) '$(msg)' --from $(wallet) --chain-id $(CHAIN_ID) \
 		--gas-prices 0.25$(CHAIN_FEE_DENOM) --gas auto --gas-adjustment 1.3 -y --output json -b block > $(DIR)/.wasmd_data/cached_execute_resp
@@ -240,8 +259,8 @@ endif
 	@cat $(DIR)/.wasmd_data/cached_execute_resp | jq -r '.txhash' >> $(DIR)/.wasmd_data/cached_execute_hash
 	@cat $(DIR)/.wasmd_data/cached_execute_hash | tr -d '\n'
 	@echo
-	@rm $(DIR)/.wasmd_data/cached_execute_resp
-	@rm $(DIR)/.wasmd_data/cached_execute_hash
+	@sudo rm $(DIR)/.wasmd_data/cached_execute_resp
+	@sudo rm $(DIR)/.wasmd_data/cached_execute_hash
 
 	@tput setaf 2; echo "==> Contract executed"; tput sgr0
 	@echo
@@ -253,17 +272,17 @@ ifndef msg
 endif
 # Use cached contract adderss if the parameter is missed
 	$(eval cached_contract := $(shell cat $(DIR)/.wasmd_data/cached_address 2>/dev/null))
-	@if [ "$(contract)" == "$(EMP)" ] && [ "$(cached_contract)" == "$(EMP)" ]; then \
+	@if [ "$(contract)" = "$(EMP)" ] && [ "$(cached_contract)" = "$(EMP)" ]; then \
 		echo "Error: missing cached address or contract parameter"; \
 		exit 1; \
 	fi
-	@if [ "$(contract)" == "$(EMP)" ]; then \
+	@if [ "$(contract)" = "$(EMP)" ]; then \
 		echo "Reading last instantiated contract: $(cached_contract)"; \
 		$(eval contract = $(shell cat $(DIR)/.wasmd_data/cached_address 2>/dev/null)) \
 	fi
 	
-	@docker run --rm \
-		--volume $(DIR)/.wasmd_data:/home/wasm_user/.wasmd \
+	@sudo docker run --rm \
+		--volume $(DIR)/.wasmd_data:/root/.wasmd \
 		$(CONTAINER_WASMD) \
 	wasmd query wasm contract-state smart $(contract) '$(msg)'
 

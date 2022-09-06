@@ -30,12 +30,3 @@ ENV NODE "https://rpc.malaga-420.cosmwasm.com:443"
 
 # Set working directory
 WORKDIR /usr/scope
-
-# Use user uid for creating user with regular permissions
-ARG UID=8877
-RUN useradd -u $UID wasm_user
-
-RUN mkdir -p /home/wasm_user
-RUN chown -R $UID /home/wasm_user
-
-USER wasm_user
